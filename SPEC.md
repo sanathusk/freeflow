@@ -1,17 +1,20 @@
 # FreeFlow: System Specification
 
 ## Objective
-FreeFlow is an offline-first, keyboard-first Progressive Web Application (PWA) designed for rapid mindmapping and concept sketching. It captures ideas in real-time "flow" by enabling friction-free node creation, branching, and navigation via intuitive keyboard shortcuts and mouse interactions. 
+
+FreeFlow is an offline-first, keyboard-first Progressive Web Application (PWA) designed for rapid mindmapping and concept sketching. It captures ideas in real-time "flow" by enabling friction-free node creation, branching, and navigation via intuitive keyboard shortcuts and mouse interactions.
 
 All mindmap data is persisted locally on the user's filesystem following the open [JSON Canvas 1.0 Spec](https://jsoncanvas.org/spec/1.0/) (`.canvas` files), guaranteeing zero vendor lock-in and seamless interoperability with tools like Obsidian Canvas.
 
 ### Target User & Persona
+
 - General brainstormers capturing ideas fast without mouse/cloud friction. Not architects-only, not researchers-only in MVP.
 - Source of truth for MVP scope is `docs/ideas/freeflow-flow-note.md`; this SPEC mirrors it.
 
 ---
 
 ## Tech Stack
+
 - **Runtime & Package Manager**: Bun (`bun`)
 - **Language**: TypeScript (`strict: true`)
 - **Frontend Framework**: React 19 / React 18
@@ -27,6 +30,7 @@ All mindmap data is persisted locally on the user's filesystem following the ope
 ---
 
 ## Commands
+
 ```bash
 # Install dependencies
 bun install
@@ -57,6 +61,7 @@ bun run preview
 ---
 
 ## Project Structure
+
 ```
 freeflow/
 ├── public/
@@ -116,6 +121,7 @@ freeflow/
 ## Core Features & Interaction Architecture
 
 ### 1. JSON Canvas 1.0 Compliant Data Model
+
 - Parse and serialize `.canvas` JSON structure:
   - **Nodes**: `id`, `type` (`text` | `group` | `file` | `link`), `x`, `y`, `width`, `height`, `color` (1-6 or hex), plus type-specific fields (`text`, `label`, `url`, `file`).
   - **Edges**: `id`, `fromNode`, `fromSide`, `toNode`, `toSide`, `toEnd`, `color`, `label`.
@@ -123,7 +129,9 @@ freeflow/
 - Clean JSON formatting with 2 spaces for human git diff-ability.
 
 ### 2. Keyboard-First "Flow" State Mechanics
+
 Designed for friction-free thought capture without leaving the keyboard. Two modes: navigation ↔ edit.
+
 - Navigation mode:
   - `Tab` / `Ctrl+Left`: Create and branch a **Child Node** (placed to the right, `x = parent.x + 150 + 80`, connected `fromSide: right → toSide: left`, auto-enters edit on new node).
   - `Ctrl+Up` / `Ctrl+Down`: Create **Sibling Node** above / below (`y = prev.y + height + 40` + push-down collision pass, auto-enters edit).
@@ -141,6 +149,7 @@ Designed for friction-free thought capture without leaving the keyboard. Two mod
 - `Space + Drag` or Middle Click: Pan canvas smoothly.
 
 ### 3. Local-First File Persistence & Launch Flow
+
 - **Welcome / Launch Screen**: When launching without an active file:
   - Simple, distraction-free welcome screen with two primary actions:
     1. **Open Existing**: Invokes native file picker (`showOpenFilePicker` with `.canvas` filter) to load an existing JSON Canvas file into the workspace.
@@ -155,25 +164,27 @@ Designed for friction-free thought capture without leaving the keyboard. Two mod
 ---
 
 ## Code Style
+
 - **TypeScript**: Strict type checking (`strict: true`, no explicit `any`).
 - **Functional Components**: React hooks, explicit return types where beneficial, no class components.
 - **Separation of Concerns**: Pure domain logic (JSON Canvas parsing, layout calculations) decoupled from React UI components.
 - **Styling**: Utility-first Tailwind CSS with consistent color tokens matching JSON Canvas preset colors (`1`: Red, `2`: Orange, `3`: Yellow, `4`: Green, `5`: Cyan, `6`: Purple).
 
 ### Example Snippet: JSON Canvas Parser & Edge Connector
+
 ```typescript
-import { CanvasData, CanvasTextNode, CanvasEdge } from './types';
+import { CanvasData, CanvasTextNode, CanvasEdge } from "./types";
 
 export function createChildNode(
   parentNode: CanvasTextNode,
-  newText: string = ''
+  newText: string = "",
 ): { node: CanvasTextNode; edge: CanvasEdge } {
   const childId = crypto.randomUUID();
   const edgeId = crypto.randomUUID();
-  
+
   const childNode: CanvasTextNode = {
     id: childId,
-    type: 'text',
+    type: "text",
     text: newText,
     x: parentNode.x + parentNode.width + 80,
     y: parentNode.y,
@@ -184,10 +195,10 @@ export function createChildNode(
   const edge: CanvasEdge = {
     id: edgeId,
     fromNode: parentNode.id,
-    fromSide: 'right',
+    fromSide: "right",
     toNode: childId,
-    toSide: 'left',
-    toEnd: 'arrow',
+    toSide: "left",
+    toEnd: "arrow",
   };
 
   return { node: childNode, edge };
@@ -197,6 +208,7 @@ export function createChildNode(
 ---
 
 ## Testing Strategy (MVP: no unit-only, e2E/smoke only)
+
 - **No unit testing in MVP**: No Vitest unit/integration suite (`tests/` not required for v1). Parser, layout, and keyboard hooks verified via e2E/smoke + manual checklist instead.
 - **End-to-End / Smoke (Playwright, `bun run test:e2e`)**:
   - Core flow loop: `Tab` -> type -> `Ctrl+Left` child -> `Ctrl+Up/Down` sibling -> `Enter` edit -> arrows navigate — 10-node no-mouse map builds without errors.
@@ -209,6 +221,7 @@ export function createChildNode(
 ---
 
 ## Boundaries
+
 - **Always do**:
   - Ensure strict JSON Canvas 1.0 specification compliance (spec only, not Obsidian-specific behavior); file nodes preserved losslessly on round-trip.
   - Keep offline functionality 100% operational (zero external API or cloud database dependencies).
@@ -229,6 +242,7 @@ export function createChildNode(
 ---
 
 ## Success Criteria
+
 1. **JSON Canvas Spec Compliance**: Reads and writes standard `.canvas` files accurately with zero data loss on round-trips (`parse(serialize(data)) === data`), including preserved file nodes. Verified with JSON Canvas 1.0 fixtures.
 2. **True Keyboard-Driven Brainstorming**: A user can create a 10-node mindmap completely using only `Tab`, `Ctrl+Arrows`, `Enter`, type, and `Arrow` keys without touching the mouse (timed no-mouse test).
 3. **Node Editing MVP**: Text + Group + Link nodes editable (text markdown inline, group label/resize, link URL card); file nodes preserved read-only.
@@ -240,14 +254,14 @@ export function createChildNode(
 ---
 
 ## Approved Architectural Decisions
+
 1. **Routing**: Standardized on **TanStack Router** (`@tanstack/react-router`) for end-to-end type safety. Shell kept in v1 even though MVP is single-file, for future outline/library views.
 2. **Layout Engine**: Automatic hierarchical tree layout for MVP (`Tab`/`Ctrl+Left` child to right, `Ctrl+Up/Down` siblings, 80px X-gap, 40px Y-gap + push-down collision pass); freeform move-drag deferred post-MVP, resize-drag + auto-height grow in MVP.
 3. **Node Types (MVP Scope)**: Text + Group + Link editing:
    - **Text Node**: Plain text & Markdown with inline editing/rendering, default 150x150, resize + auto-height grow.
    - **Group Node**: Bounding container with label, resizable.
    - **Link Node**: URL cards with click-to-open and metadata display.
-   *(File nodes: read-tolerant, preserved on write, no editing UI in MVP. Safari/Firefox fallback post-MVP. Chrome-only File System Access in MVP.)*
+     _(File nodes: read-tolerant, preserved on write, no editing UI in MVP. Safari/Firefox fallback post-MVP. Chrome-only File System Access in MVP.)_
 4. **Launch Screen**: Welcome screen with "Open Existing" and "Create New" (suggested file name `ff-note.canvas`), automatically creating a central node and opening into flow edit mode.
 5. **Delete UX**: `Delete`/`Backspace` in navigation mode always confirms; nodes with children offer delete-subtree vs reparent-children-as-siblings vs cancel; root with children offers delete-subtree vs cancel only; group offers delete-group+members vs ungroup-keep-members vs cancel.
 6. **Actions Palette**: `Cmd/Ctrl+K` lists file/node/view actions (new/open/save, child/sibling/edit/delete, undo/redo, zoom in/out/fit, cheat sheet), each row showing its shortcut. No Save As or color actions in MVP.
-

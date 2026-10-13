@@ -1,26 +1,33 @@
 # FreeFlow Flow-note
 
 ## Problem Statement
+
 How Might We let general brainstormers capture mindmaps at thinking speed — keyboard-only, local-only, no lock-in?
 
 ## Target User
+
 General brainstormers capturing ideas fast without mouse/cloud friction. Not architects-only, not researchers-only in MVP.
 
 ## Success Moment (v1)
+
 - Create a 10-node mindmap with `Tab` / `Ctrl+Arrows` / `Enter` / type / arrows only, no mouse.
 - Save/open standard `.canvas` per JSON Canvas 1.0 with lossless `parse(serialize())` round-trip.
 - Installable offline PWA with full feature parity offline.
 
 ## Recommended Direction
+
 Mindmap-native keyboard flow. One file at a time, nodes created spatially with `Tab` / `Ctrl+Left` (child to right) and `Ctrl+Up` / `Ctrl+Down` (sibling above / below), `Enter` edits selected node, inline markdown edit, arrow-key navigation, deterministic auto tree layout. Open/save `.canvas` per JSON Canvas 1.0 spec locally via Chrome File System Access API. Text + Group + Link editing in MVP (file nodes read-tolerant only). Router shell kept (TanStack Router) even for single-file v1. No outline editor in MVP. No node move-drag in MVP.
 
 ## Key Assumptions to Validate (via e2E/smoke + manual, no unit-only in MVP)
+
 - [ ] 10-node map completable with Tab / Ctrl+Arrows / Enter / arrows only — timed no-mouse test.
 - [ ] Auto-placement without move-drag is acceptable — test frustration when move disabled (resize still allowed).
 - [ ] `parse(serialize())` round-trips JSON Canvas 1.0 fixtures losslessly.
 
 ## MVP Scope
+
 In:
+
 - Text + Group + Link nodes + edges (file nodes read-tolerant, preserved on write, no file editing UI in MVP).
 - Default text node 150x150, manual resize via drag, auto-height grow on text overflow. Group resizable container with label. Link URL card with click-to-open.
 - Edges right-to-left only (`fromSide: right`, `toSide: left`, `toEnd: arrow`).
@@ -30,7 +37,7 @@ In:
 - Actions palette (`Cmd/Ctrl+K`): new file (Save picker upfront), open file, save, create child, create sibling above, create sibling below, edit selected, delete selected (same confirm flow), undo, redo, zoom in, zoom out, zoom fit, toggle shortcut cheat sheet. Every palette action shows its keyboard shortcut. No Save As or color actions in MVP.
 - File: new mindmap requires Save picker location upfront; dirty dot + `beforeunload` guard; direct write-back to same handle.
 - Offline PWA shell. Router shell kept.
-Out:
+  Out:
 - Outline pane / outline-as-source (post-MVP view).
 - Node move-drag tuning (post-MVP; resize-drag stays).
 - Full file attachment node editing UI.
@@ -40,6 +47,7 @@ Out:
 - Cloud sync, analytics, collaboration.
 
 ## Not Doing (and Why)
+
 - Outline-as-source — doubles interaction model; post-MVP view.
 - Local file library/search — permission/index cost; after single-file flow proven.
 - Full file node editing — keeps parser/writer scope minimal, still spec-compliant on read.
@@ -48,6 +56,7 @@ Out:
 - Screen-reader support — deferred post-MVP for speed, navigation mode must not break a11y basics.
 
 ## Decisions (resolved)
+
 - User: general brainstormers; constraints: keyboard simplicity + solo/small scope.
 - Differentiator vs Miro/Excalidraw/Canvas: speed (no mouse/cloud) + open `.canvas` format + offline.
 - Auto-layout must avoid overlap at 100+ nodes: child X-gap 80px (`x = parent.x + 150 + 80`), sibling Y-gap 40px (`y = prev.y + height + 40`), plus push-down collision pass for overlapping subtrees.
